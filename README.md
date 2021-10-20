@@ -1,5 +1,3 @@
-**Connect your apps to ProcessWire CMS!**
-
 AppApiFile adds the /file endpoint to the [AppApi](https://modules.processwire.com/modules/app-api/) routes definition.
 
 [![Current Version](https://img.shields.io/github/v/tag/Sebiworld/AppApiFile?label=Current%20Version)](https://img.shields.io/github/v/tag/Sebiworld/AppApiFile?label=Current%20Version) [![Current Version](https://img.shields.io/github/issues-closed-raw/Sebiworld/AppApiFile?color=%2356d364)](https://img.shields.io/github/issues-closed-raw/Sebiworld/AppApiFile?color=%2356d364) [![Current Version](https://img.shields.io/github/issues-raw/Sebiworld/AppApiFile)](https://img.shields.io/github/issues-raw/Sebiworld/AppApiFile)
