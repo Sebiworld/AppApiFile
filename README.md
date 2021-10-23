@@ -48,7 +48,7 @@ The following GET-params (optional) can be used to manipulate an image:
 
 Use GET-Param `format=base64` to receive the file in base64 format.
 
-**Pro tip**: If you want to include an image from the api using the standard <img src=""> tag, it can be very difficult to include the api key and a token as headers. However, it is possible to include these values as GET parameters. The GET parameter with the apikey is called `api_key`. A token can be sent as parameter `authorization`.
+**Pro tip**: If you want to include an image from the api using the standard `<img src="">` tag, it can be very difficult to include the api key and a token as headers. However, it is possible to include these values as GET parameters. The GET parameter with the apikey is called `api_key`. A token can be sent as parameter `authorization`.
 
 > Disclaimer: I recommend to use this solution only for this exceptional case. Generally headers are the better and more elegant solution.
 
