@@ -7,7 +7,7 @@ AppApiFile adds the /file endpoint to the [AppApi](https://modules.processwire.c
 | | |
 | ------------------: | -------------------------------------------------------------------------- |
 | ProcessWire-Module: | [https://modules.processwire.com/modules/app-api-file/](https://modules.processwire.com/modules/app-api-file/)                                                                    |
-|      Support-Forum: | [https://processwire.com/talk/topic/24014-new-module-appapi/](https://processwire.com/talk/topic/24014-new-module-appapi/)                                                                      |
+|      Support-Forum: | [https://processwire.com/talk/topic/26272-appapi-module-appapifile/](https://processwire.com/talk/topic/26272-appapi-module-appapifile/)                                                                      |
 |         Repository: | [https://github.com/Sebiworld/AppApiFile](https://github.com/Sebiworld/AppApiFile) |
 
 Relies on AppApi:
@@ -55,6 +55,10 @@ Use GET-Param `format=base64` to receive the file in base64 format.
 <a name="changelog"></a>
 
 ## Changelog
+
+### Changes in 1.0.2 (2021-10-23)
+
+- Updated module infos
 
 ### Changes in 1.0.1 (2021-10-23)
 

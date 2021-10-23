@@ -26,10 +26,10 @@ class AppApiFile extends WireData implements Module {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '1.0.1',
+			'version' => '1.0.2',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
-			'href' => 'https://modules.processwire.com/modules/app-api/',
+			'href' => 'https://modules.processwire.com/modules/app-api-file/',
 			'requires' => [
 				'PHP>=7.2.0',
 				'ProcessWire>=3.0.98',
