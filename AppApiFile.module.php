@@ -41,7 +41,7 @@ class AppApiFile extends WireData implements Module {
 	}
 
 	public function init() {
-		$module = $this->wire('modules')->get('AppAPI');
+		$module = $this->wire('modules')->get('AppApi');
 		$module->registerRoute(
 			'file',
 			[

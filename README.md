@@ -39,12 +39,15 @@ You can access all files that are uploaded at any ProcessWire page. Call `/file/
 The GET-param "file" defines the basename of the file which you want to get.
 
 The following GET-params (optional) can be used to manipulate an image:
- * width
- * height
- * maxwidth
- * maxheight
- * cropX
- * cropY
+
+| Param         | Value    | Description                                                                       |
+| ------------- | -------- | --------------------------------------------------------------------------------- |
+| **width**     | int >= 0 | Width of the requested image                                                      |
+| **height**    | int >= 0 | Height of the requested image                                                     |
+| **maxWidth**  | int >= 0 | Maximum Width, if the original image's resolution is sufficient                   |
+| **maxHeight** | int >= 0 | Maximum Height, if the original image's resolution is sufficient                  |
+| **cropX**     | int >= 0 | Start-X-position for cropping (crop enabled, if width, height, cropX & cropY set) |
+| **cropY**     | int >= 0 | Start-Y-position for cropping (crop enabled, if width, height, cropX & cropY set) |
 
 Use GET-Param `format=base64` to receive the file in base64 format.
 
