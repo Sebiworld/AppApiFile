@@ -26,7 +26,7 @@ class AppApiFile extends WireData implements Module {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '1.0.2',
+			'version' => '1.0.3',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
 			'href' => 'https://modules.processwire.com/modules/app-api-file/',
@@ -73,11 +73,16 @@ class AppApiFile extends WireData implements Module {
 	}
 
 	protected static function fileRequest(Page $page) {
+		if (!$page || !$page->id) {
+			throw new ForbiddenException();
+		}
+
 		if ($page instanceof RepeaterPage) {
-			if (!$page->getForPage()->viewable()) {
+			$rootPage = $page->getForPage();
+			if (!$rootPage || !$rootPage->id || !$rootPage->viewable('', false)) {
 				throw new ForbiddenException();
 			}
-		} elseif (!$page->viewable()) {
+		} elseif (!$page->viewable('', false)) {
 			throw new ForbiddenException();
 		}
 

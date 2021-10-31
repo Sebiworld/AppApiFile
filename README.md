@@ -59,6 +59,10 @@ Use GET-Param `format=base64` to receive the file in base64 format.
 
 ## Changelog
 
+### Changes in 1.0.3 (2021-10-31)
+
+- Improved access to repeater images
+
 ### Changes in 1.0.2 (2021-10-23)
 
 - Updated module infos
