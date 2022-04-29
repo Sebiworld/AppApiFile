@@ -26,7 +26,7 @@ class AppApiFile extends WireData implements Module {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '1.0.3',
+			'version' => '1.0.4',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
 			'href' => 'https://modules.processwire.com/modules/app-api-file/',
@@ -58,23 +58,58 @@ class AppApiFile extends WireData implements Module {
 	public static function pageIDFileRequest($data) {
 		$data = AppApiHelper::checkAndSanitizeRequiredParameters($data, ['id|int']);
 		$page = wire('pages')->get('id=' . $data->id);
-		return self::fileRequest($page);
+		return self::fileRequest($page, '');
 	}
 
 	public static function dashboardFileRequest($data) {
 		$page = wire('pages')->get('/');
-		return self::fileRequest($page);
+		return self::fileRequest($page, '');
 	}
 
 	public static function pagePathFileRequest($data) {
 		$data = AppApiHelper::checkAndSanitizeRequiredParameters($data, ['path|pagePathName']);
-		$page = wire('pages')->get('/' . $data->path);
-		return self::fileRequest($page);
+		$path = '/' . trim($data->path, '/') . '/';
+		$page = wire('pages')->get('path="' . $path . '"');
+
+		if (!$page->id && wire('modules')->isInstalled('LanguageSupport')) {
+			// Check if its a root path
+			$rootPage = wire('pages')->get('/');
+			foreach ($rootPage->urls as $key => $value) {
+				if ($value !== $path) {
+					continue;
+				}
+				return self::fileRequest($rootPage, $key);
+			}
+		}
+
+		$info = wire('pages')->pathFinder()->get($path);
+		if (!empty($info['language']['name'])) {
+			return self::fileRequest($page, $info['language']['name']);
+		}
+
+		return self::fileRequest($page, '');
 	}
 
-	protected static function fileRequest(Page $page) {
+	protected static function fileRequest(Page $page, $languageFromPath) {
 		if (!$page || !$page->id) {
 			throw new ForbiddenException();
+		}
+
+		if (wire('modules')->isInstalled('LanguageSupport')) {
+			if (!empty($languageFromPath) && wire('languages')->get($languageFromPath) instanceof Page && wire('languages')->get($languageFromPath)->id) {
+				wire('user')->language = wire('languages')->get($languageFromPath);
+			} else {
+				$lang = '' . strtolower(wire('input')->get->pageName('lang'));
+				$langAlt = SELF::getLanguageCode($lang);
+
+				if (!empty($lang) && wire('languages')->get($lang) instanceof Page && wire('languages')->get($lang)->id) {
+					wire('user')->language = wire('languages')->get($lang);
+				} elseif (!empty($langAlt) && wire('languages')->get($langAlt) instanceof Page && wire('languages')->get($langAlt)->id) {
+					wire('user')->language = wire('languages')->get($langAlt);
+				} else {
+					wire('user')->language = wire('languages')->getDefault();
+				}
+			}
 		}
 
 		if ($page instanceof RepeaterPage) {

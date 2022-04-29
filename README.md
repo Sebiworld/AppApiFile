@@ -59,6 +59,10 @@ Use GET-Param `format=base64` to receive the file in base64 format.
 
 ## Changelog
 
+### Changes in 1.0.4 (2022-04-29)
+
+- Added support for Multi-Language URLS
+
 ### Changes in 1.0.3 (2021-10-31)
 
 - Improved access to repeater images
