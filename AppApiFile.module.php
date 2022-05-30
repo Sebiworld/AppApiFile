@@ -26,7 +26,7 @@ class AppApiFile extends WireData implements Module {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '1.0.4',
+			'version' => '1.0.5',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
 			'href' => 'https://modules.processwire.com/modules/app-api-file/',
@@ -141,7 +141,7 @@ class AppApiFile extends WireData implements Module {
 			$cropY = wire('input')->get('cropy', 'intUnsigned', 0);
 
 			$options = [
-				'webpAdd' => (wire('input')->get('webpAdd', 'intUnsigned', 0) !== 0)
+				'webpAdd' => ((wire('input')->get('webpAdd') === 'true' || wire('input')->get('webpAdd', 'intUnsigned', 0) !== 0) && self::isWebpSupported($file))
 			];
 
 			if ($cropX > 0 && $cropY > 0 && $width > 0 && $height > 0) {
@@ -164,6 +164,9 @@ class AppApiFile extends WireData implements Module {
 		}
 
 		$filepath = $file->filename;
+		if ($file instanceof Pageimage && (wire('input')->get('webp') === 'true' || wire('input')->get('webp', 'intUnsigned', 0) !== 0) && self::isWebpSupported($file)) {
+			$filepath = $file->webp->filename;
+		}
 		$fileinfo = pathinfo($filepath);
 		$filename = $fileinfo['basename'];
 
@@ -531,5 +534,24 @@ class AppApiFile extends WireData implements Module {
 		}
 
 		return $code;
+	}
+
+	/**
+	 * Check if server can build webp images
+	 */
+	protected static function isWebpSupported(Pageimage $image) {
+		if (isset(wire('config')->webpSupported) && !wire('config')->webpSupported) {
+			return false;
+		}
+
+		if ($image->ext === 'svg') {
+			return false;
+		}
+
+		if ($image->url === $image->webp->url) {
+			return false;
+		}
+
+		return true;
 	}
 }

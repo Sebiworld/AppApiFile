@@ -4,21 +4,21 @@ AppApiFile adds the /file endpoint to the [AppApi](https://modules.processwire.c
 
 <a href="https://www.buymeacoffee.com/Sebi.dev" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
-| | |
-| ------------------: | -------------------------------------------------------------------------- |
-| ProcessWire-Module: | [https://modules.processwire.com/modules/app-api-file/](https://modules.processwire.com/modules/app-api-file/)                                                                    |
-|      Support-Forum: | [https://processwire.com/talk/topic/26272-appapi-module-appapifile/](https://processwire.com/talk/topic/26272-appapi-module-appapifile/)                                                                      |
-|         Repository: | [https://github.com/Sebiworld/AppApiFile](https://github.com/Sebiworld/AppApiFile) |
+|                     |                                                                                                                                          |
+| ------------------: | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| ProcessWire-Module: | [https://modules.processwire.com/modules/app-api-file/](https://modules.processwire.com/modules/app-api-file/)                           |
+|      Support-Forum: | [https://processwire.com/talk/topic/26272-appapi-module-appapifile/](https://processwire.com/talk/topic/26272-appapi-module-appapifile/) |
+|         Repository: | [https://github.com/Sebiworld/AppApiFile](https://github.com/Sebiworld/AppApiFile)                                                       |
 
 Relies on AppApi:
 
-| | |
-| ------------------: | -------------------------------------------------------------------------- |
-| AppApi-Module: | [https://modules.processwire.com/modules/app-api/](https://modules.processwire.com/modules/app-api/)                                                                    |
-|      Support-Forum: | [https://processwire.com/talk/topic/24014-new-module-appapi/](https://processwire.com/talk/topic/24014-new-module-appapi/)                                                                      |
-|         Repository: | [https://github.com/Sebiworld/AppApi](https://github.com/Sebiworld/AppApi) |
-| AppApi Wiki: | [https://github.com/Sebiworld/AppApi/wiki](https://github.com/Sebiworld/AppApi/wiki) |
-| | |
+|                |                                                                                                                            |
+| -------------: | -------------------------------------------------------------------------------------------------------------------------- |
+| AppApi-Module: | [https://modules.processwire.com/modules/app-api/](https://modules.processwire.com/modules/app-api/)                       |
+| Support-Forum: | [https://processwire.com/talk/topic/24014-new-module-appapi/](https://processwire.com/talk/topic/24014-new-module-appapi/) |
+|    Repository: | [https://github.com/Sebiworld/AppApi](https://github.com/Sebiworld/AppApi)                                                 |
+|   AppApi Wiki: | [https://github.com/Sebiworld/AppApi/wiki](https://github.com/Sebiworld/AppApi/wiki)                                       |
+|                |                                                                                                                            |
 
 <a name="installation"></a>
 
@@ -58,6 +58,10 @@ Use GET-Param `format=base64` to receive the file in base64 format.
 <a name="changelog"></a>
 
 ## Changelog
+
+### Changes in 1.0.5 (2022-05-30)
+
+- Fix Webp support
 
 ### Changes in 1.0.4 (2022-04-29)
 
