@@ -59,6 +59,10 @@ Use GET-Param `format=base64` to receive the file in base64 format.
 
 ## Changelog
 
+### Changes in 1.0.6 (2022-06-01)
+
+- Bugfix throw 404 status if not found
+
 ### Changes in 1.0.5 (2022-05-30)
 
 - Fix Webp support

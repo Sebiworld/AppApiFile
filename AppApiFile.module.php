@@ -26,7 +26,7 @@ class AppApiFile extends WireData implements Module {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '1.0.5',
+			'version' => '1.0.6',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
 			'href' => 'https://modules.processwire.com/modules/app-api-file/',
@@ -92,7 +92,7 @@ class AppApiFile extends WireData implements Module {
 
 	protected static function fileRequest(Page $page, $languageFromPath) {
 		if (!$page || !$page->id) {
-			throw new ForbiddenException();
+			throw new NotFoundException();
 		}
 
 		if (wire('modules')->isInstalled('LanguageSupport')) {
@@ -115,7 +115,7 @@ class AppApiFile extends WireData implements Module {
 		if ($page instanceof RepeaterPage) {
 			$rootPage = $page->getForPage();
 			if (!$rootPage || !$rootPage->id || !$rootPage->viewable('', false)) {
-				throw new ForbiddenException();
+				throw new NotFoundException();
 			}
 		} elseif (!$page->viewable('', false)) {
 			throw new ForbiddenException();
