@@ -1,5 +1,4 @@
 <?php
-
 namespace ProcessWire;
 
 /**
@@ -45,12 +44,105 @@ class AppApiFile extends WireData implements Module {
 		$module->registerRoute(
 			'file',
 			[
-				['OPTIONS', '{id:\d+}', ['GET']],
-				['OPTIONS', '{path:.+}', ['GET']],
-				['OPTIONS', '', ['GET']],
-				['GET', '{id:\d+}', AppApiFile::class, 'pageIDFileRequest'],
-				['GET', '{path:.+}', AppApiFile::class, 'pagePathFileRequest'],
-				['GET', '', AppApiFile::class, 'dashboardFileRequest']
+				['OPTIONS', '{id:\d+}', ['GET'], [], [], [
+					// documentation
+					'summary' => 'Preflight options',
+					'tags' => ['File'],
+					'security' => [
+						['apiKey' => []],
+						['bearerAuth' => []]
+					],
+					'parameters' => [
+						[
+							'name' => 'id:\d+',
+							'in' => 'path',
+							'description' => 'Page ID of the parent page of the requested file',
+							'required' => true,
+							'schema' => [
+								'type' => 'integer',
+								'format' => 'int64'
+							]
+						]
+					]
+				]],
+				['OPTIONS', '{path:.+}', ['GET'], [], [], [
+					// documentation
+					'summary' => 'Preflight options',
+					'tags' => ['File'],
+					'security' => [
+						['apiKey' => []],
+						['bearerAuth' => []]
+					],
+					'parameters' => [
+						[
+							'name' => 'path:.+',
+							'in' => 'path',
+							'description' => 'Page path of the parent page of the requested file',
+							'required' => true,
+							'schema' => [
+								'type' => 'string'
+							]
+						]
+					]
+				]],
+				['OPTIONS', '', ['GET'], [], [], [
+					// documention
+					'summary' => 'Preflight options',
+					'tags' => ['File'],
+					'security' => [
+						['apiKey' => []],
+						['bearerAuth' => []]
+					],
+				]],
+				['GET', '{id:\d+}', AppApiFile::class, 'pageIDFileRequest', [], [
+					// documentation
+					'summary' => 'Get a file for a page id.',
+					'tags' => ['File'],
+					'security' => [
+						['apiKey' => []],
+						['bearerAuth' => []]
+					],
+					'parameters' => [
+						[
+							'name' => 'id:\d+',
+							'in' => 'path',
+							'description' => 'Page ID of the parent page of the requested file',
+							'required' => true,
+							'schema' => [
+								'type' => 'integer',
+								'format' => 'int64'
+							]
+						]
+					]
+				]],
+				['GET', '{path:.+}', AppApiFile::class, 'pagePathFileRequest', [], [
+					// documentation
+					'summary' => 'Get a file for a page path.',
+					'tags' => ['File'],
+					'security' => [
+						['apiKey' => []],
+						['bearerAuth' => []]
+					],
+					'parameters' => [
+						[
+							'name' => 'path:.+',
+							'in' => 'path',
+							'description' => 'Page path of the parent page of the requested file',
+							'required' => true,
+							'schema' => [
+								'type' => 'string'
+							]
+						]
+					]
+				]],
+				['GET', '', AppApiFile::class, 'dashboardFileRequest', [], [
+					'summary' => 'Get a file for the root page',
+					'tags' => ['File'],
+					'security' => [
+						['apiKey' => []],
+						['bearerAuth' => []]
+					],
+				]]
 			]
 		);
 	}
