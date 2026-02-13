@@ -25,7 +25,7 @@ class AppApiFile extends WireData implements Module {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '1.0.6',
+			'version' => '1.0.7',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
 			'href' => 'https://modules.processwire.com/modules/app-api-file/',
@@ -183,6 +183,8 @@ class AppApiFile extends WireData implements Module {
 	}
 
 	protected static function fileRequest(Page $page, $languageFromPath) {
+		Router::clearOutputBuffer();
+
 		if (!$page || !$page->id) {
 			throw new NotFoundException();
 		}
@@ -378,6 +380,7 @@ class AppApiFile extends WireData implements Module {
 		// header('Accept-Ranges: 0-'.$filesize);
 		set_time_limit(0);
 		fseek($openfile, $filestart);
+
 		ob_start();
 		while (!feof($openfile)) {
 			print(@fread($openfile, (1024 * 8)));
