@@ -15,17 +15,38 @@ namespace ProcessWire;
  *   - height
  *   - maxwidth
  *   - maxheight
- *   - cropX
- *   - cropY
+ *   - cropx
+ *   - cropy
+ * Images are never scaled up: a requested size above the original size is
+ * reduced to the original size (width and height together are reduced by the
+ * same factor). Requested sizes are limited to MAX_DIMENSION pixels per axis;
+ * without size parameters the original stays available.
  *
  * Use GET-Param "format=base64" to receive the file in base64 format.
+ *
+ * Caching: add a non-empty GET-param "v" (e.g. a hash of the file's
+ * modification time) and change it whenever the file changes. Cache-Control:
+ *   - guest, public page, with "v": public, max-age=31536000, immutable
+ *   - guest, public page, without "v": no-cache
+ *   - logged-in user, public page, with "v": private, max-age=31536000, immutable
+ *   - all other cases (non-public page, or logged in without "v"): private, no-cache
+ * A matching If-None-Match header is answered with 304 Not Modified (not for
+ * format=base64).
+ *
+ * Files of pages that the current user cannot view are answered with 404,
+ * the same as an unknown page.
  */
 class AppApiFile extends WireData implements Module {
+	/**
+	 * Maximum width and height in pixels that can be requested for an image.
+	 */
+	const MAX_DIMENSION = 4096;
+
 	public static function getModuleInfo() {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '1.0.7',
+			'version' => '2.0.0',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
 			'href' => 'https://modules.processwire.com/modules/app-api-file/',
@@ -206,13 +227,16 @@ class AppApiFile extends WireData implements Module {
 			}
 		}
 
+		// Access to files of repeater items is decided by the page that owns the repeater.
+		$accessPage = $page;
 		if ($page instanceof RepeaterPage) {
-			$rootPage = $page->getForPage();
-			if (!$rootPage || !$rootPage->id || !$rootPage->viewable('', false)) {
+			$accessPage = $page->getForPage();
+			if (!$accessPage || !$accessPage->id || !$accessPage->viewable('', false)) {
 				throw new NotFoundException();
 			}
 		} elseif (!$page->viewable('', false)) {
-			throw new ForbiddenException();
+			// Same answer as for an unknown id, so that hidden pages cannot be detected.
+			throw new NotFoundException();
 		}
 
 		$filename = wire('input')->get('file', 'filename');
@@ -233,6 +257,26 @@ class AppApiFile extends WireData implements Module {
 			$maxHeight = wire('input')->get('maxheight', 'intUnsigned', 0);
 			$cropX = wire('input')->get('cropx', 'intUnsigned', 0);
 			$cropY = wire('input')->get('cropy', 'intUnsigned', 0);
+
+			[$width, $height] = self::limitSize($width, $height, self::MAX_DIMENSION, self::MAX_DIMENSION);
+			$maxWidth = min($maxWidth, self::MAX_DIMENSION);
+			$maxHeight = min($maxHeight, self::MAX_DIMENSION);
+
+			// Never scale up: sizes above the original are reduced to the original size.
+			$originalWidth = (int) $file->width;
+			$originalHeight = (int) $file->height;
+			if ($originalWidth > 0 && $originalHeight > 0) {
+				[$width, $height] = self::limitSize($width, $height, $originalWidth, $originalHeight);
+
+				$isCrop = $cropX > 0 && $cropY > 0 && $width > 0 && $height > 0;
+				$isOriginalWidth = $width === 0 || $width === $originalWidth;
+				$isOriginalHeight = $height === 0 || $height === $originalHeight;
+				if (!$isCrop && ($width > 0 || $height > 0) && $isOriginalWidth && $isOriginalHeight) {
+					// The requested size is the original size: deliver the original file.
+					$width = 0;
+					$height = 0;
+				}
+			}
 
 			$options = [
 				'webpAdd' => ((wire('input')->get('webpAdd') === 'true' || wire('input')->get('webpAdd', 'intUnsigned', 0) !== 0) && self::isWebpSupported($file))
@@ -277,9 +321,11 @@ class AppApiFile extends WireData implements Module {
 			throw new InternalServererrorException();
 		}
 
+		$etag = '"' . md5_file($filepath) . '"';
+
 		header('Date: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
 		header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($filepath)) . ' GMT');
-		header('ETag: "' . md5_file($filepath) . '"');
+		header('ETag: ' . $etag);
 		header('Accept-Encoding: gzip, deflate');
 
 		// Is Base64 requested?
@@ -289,11 +335,41 @@ class AppApiFile extends WireData implements Module {
 			exit();
 		}
 
-		header('Pragma: public');
-		header('Expires: -1');
-		// header("Cache-Control: public,max-age=14400,public");
-		header('Cache-Control: public, must-revalidate, post-check=0, pre-check=0');
-		// header("Content-Disposition: attachment; filename=\"$filename\"");
+		// A non-empty "v" parameter marks a versioned URL: the client changes it
+		// whenever the file changes, so the response may be cached for a year.
+		// Only guests get "public" for files of public pages, so that shared
+		// caches never store a response that depended on a user's rights.
+		// Logged-in users may cache versioned files of public pages in their
+		// own browser; files of non-public pages are always revalidated, so
+		// that access is checked on every use.
+		$version = wire('input')->get('v');
+		$isVersioned = is_string($version) && $version !== '';
+		$isPublic = $accessPage->isPublic();
+		if (wire('user')->isGuest()) {
+			if (!$isPublic) {
+				$cacheControl = 'private, no-cache';
+			} elseif ($isVersioned) {
+				$cacheControl = 'public, max-age=31536000, immutable';
+			} else {
+				$cacheControl = 'no-cache';
+			}
+		} elseif ($isPublic && $isVersioned) {
+			$cacheControl = 'private, max-age=31536000, immutable';
+		} else {
+			$cacheControl = 'private, no-cache';
+		}
+
+		// Remove headers that the session may have set (e.g. "Pragma: no-cache").
+		header_remove('Pragma');
+		header_remove('Expires');
+		header('Cache-Control: ' . $cacheControl);
+
+		if (self::etagMatches($etag)) {
+			@fclose($openfile);
+			http_response_code(304);
+			exit;
+		}
+
 		header('Content-type: ' . mime_content_type($filepath));
 		header('Content-Transfer-Encoding: binary');
 
@@ -629,6 +705,51 @@ class AppApiFile extends WireData implements Module {
 		}
 
 		return $code;
+	}
+
+	/**
+	 * Reduce a requested size so that it fits into the given limits. If width
+	 * and height are both requested, both are reduced by the same factor to
+	 * keep the requested aspect ratio. 0 means "not requested".
+	 *
+	 * @return int[] [width, height]
+	 */
+	protected static function limitSize(int $width, int $height, int $limitWidth, int $limitHeight): array {
+		if ($width > 0 && $height > 0) {
+			$factor = min(1, $limitWidth / $width, $limitHeight / $height);
+			if ($factor < 1) {
+				$width = max(1, (int) round($width * $factor));
+				$height = max(1, (int) round($height * $factor));
+			}
+			return [$width, $height];
+		}
+
+		return [min($width, $limitWidth), min($height, $limitHeight)];
+	}
+
+	/**
+	 * Check whether the request's If-None-Match header contains the given ETag
+	 */
+	protected static function etagMatches(string $etag): bool {
+		$header = isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim($_SERVER['HTTP_IF_NONE_MATCH']) : '';
+		if ($header === '') {
+			return false;
+		}
+		if ($header === '*') {
+			return true;
+		}
+
+		foreach (explode(',', $header) as $candidate) {
+			$candidate = trim($candidate);
+			if (stripos($candidate, 'W/') === 0) {
+				$candidate = substr($candidate, 2);
+			}
+			if ($candidate === $etag) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

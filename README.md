@@ -44,12 +44,36 @@ The following GET-params (optional) can be used to manipulate an image:
 | ------------- | -------- | --------------------------------------------------------------------------------- |
 | **width**     | int >= 0 | Width of the requested image                                                      |
 | **height**    | int >= 0 | Height of the requested image                                                     |
-| **maxWidth**  | int >= 0 | Maximum Width, if the original image's resolution is sufficient                   |
-| **maxHeight** | int >= 0 | Maximum Height, if the original image's resolution is sufficient                  |
-| **cropX**     | int >= 0 | Start-X-position for cropping (crop enabled, if width, height, cropX & cropY set) |
-| **cropY**     | int >= 0 | Start-Y-position for cropping (crop enabled, if width, height, cropX & cropY set) |
+| **maxwidth**  | int >= 0 | Maximum Width, if the original image's resolution is sufficient                   |
+| **maxheight** | int >= 0 | Maximum Height, if the original image's resolution is sufficient                  |
+| **cropx**     | int >= 0 | Start-X-position for cropping (crop enabled, if width, height, cropx & cropy set) |
+| **cropy**     | int >= 0 | Start-Y-position for cropping (crop enabled, if width, height, cropx & cropy set) |
+
+Images are never scaled up. If only `width` or only `height` is larger than the original image, the original size is delivered. If `width` and `height` are both set and one of them is larger than the original, both are reduced by the same factor until the image fits into the original size, so the requested aspect ratio is kept (e.g. 300x800 for a 600x400 image gives 150x400). Requested sizes (`width`, `height`, `maxwidth`, `maxheight`) are limited to 4096 pixels per axis (`AppApiFile::MAX_DIMENSION`). Without size parameters the original file is delivered.
 
 Use GET-Param `format=base64` to receive the file in base64 format.
+
+### Caching
+
+| Param | Value            | Description                                                                                                 |
+| ----- | ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| **v** | non-empty string | Version of the file, e.g. a hash of its modification time and size. Change it whenever the file changes. |
+
+A page counts as public if `$page->isPublic()` is true (for repeater items: the page that owns the repeater). Access modules can make a page non-public, e.g. `PageAccessReleasetime` for pages with a release time.
+
+| Request                           | `v` set                                | no `v`              |
+| --------------------------------- | -------------------------------------- | ------------------- |
+| Guest, public page                | `public, max-age=31536000, immutable`  | `no-cache`          |
+| Logged-in user, public page       | `private, max-age=31536000, immutable` | `private, no-cache` |
+| Non-public page (any user)        | `private, no-cache`                    | `private, no-cache` |
+
+The value of `v` does not change the response. Only guests get `public`, so shared caches never store a response that depended on a user's rights. Files of non-public pages are revalidated on every use, so access is checked every time.
+
+A request whose `If-None-Match` header contains the current `ETag` (also as weak `W/` ETag or in a list) is answered with `304 Not Modified` and no body. This does not apply to `format=base64`: those responses are always sent in full and without the caching headers above.
+
+### Access
+
+Files of a page that the current user cannot view (e.g. unpublished pages) are answered with `404 Not Found`, the same as an unknown page.
 
 **Pro tip**: If you want to include an image from the api using the standard `<img src="">` tag, it can be very difficult to include the api key and a token as headers. However, it is possible to include these values as GET parameters. The GET parameter with the apikey is called `api_key`. A token can be sent as parameter `authorization`.
 
@@ -58,6 +82,22 @@ Use GET-Param `format=base64` to receive the file in base64 format.
 <a name="changelog"></a>
 
 ## Changelog
+
+### Changes in 2.0.0 (2026-10-02)
+
+#### Behavior changes
+
+Check these before updating:
+
+- Files of pages that the current user cannot view now return `404 Not Found` instead of `403 Forbidden`, the same as an unknown page.
+- Images are no longer scaled up beyond their original size (`width`/`height` above the original deliver the original size).
+- Requested image sizes are limited to 4096 pixels per axis.
+- New caching headers: `Cache-Control: no-cache` (guests, public pages without `v`) or `private, …` (logged-in users and non-public pages, see "Caching") instead of `public, must-revalidate, post-check=0, pre-check=0`. The headers `Expires: -1` and `Pragma: public` are no longer sent.
+
+#### New
+
+- GET-param `v`: versioned URLs of public pages are cached for a year (`public, max-age=31536000, immutable` for guests, `private, max-age=31536000, immutable` for logged-in users)
+- `If-None-Match` with the current ETag is answered with `304 Not Modified`
 
 ### Changes in 1.0.6 (2022-06-01)
 
