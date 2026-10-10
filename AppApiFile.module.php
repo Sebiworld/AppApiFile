@@ -34,7 +34,8 @@ namespace ProcessWire;
  * format=base64).
  *
  * Files of pages that the current user cannot view are answered with 404,
- * the same as an unknown page.
+ * the same as an unknown page. Hook after AppApiFile::isFileAccessible() to
+ * add your own access conditions.
  */
 class AppApiFile extends WireData implements Module {
 	/**
@@ -46,7 +47,7 @@ class AppApiFile extends WireData implements Module {
 		return [
 			'title' => 'AppApi - File',
 			'summary' => 'AppApi-Module that adds a file endpoint',
-			'version' => '2.0.0',
+			'version' => '2.1.0',
 			'author' => 'Sebastian Schendel',
 			'icon' => 'terminal',
 			'href' => 'https://modules.processwire.com/modules/app-api-file/',
@@ -231,10 +232,12 @@ class AppApiFile extends WireData implements Module {
 		$accessPage = $page;
 		if ($page instanceof RepeaterPage) {
 			$accessPage = $page->getForPage();
-			if (!$accessPage || !$accessPage->id || !$accessPage->viewable('', false)) {
+			if (!$accessPage || !$accessPage->id) {
 				throw new NotFoundException();
 			}
-		} elseif (!$page->viewable('', false)) {
+		}
+
+		if (!wire('modules')->get('AppApiFile')->isFileAccessible($page, $accessPage)) {
 			// Same answer as for an unknown id, so that hidden pages cannot be detected.
 			throw new NotFoundException();
 		}
@@ -470,6 +473,22 @@ class AppApiFile extends WireData implements Module {
 
 		@fclose($openfile);
 		exit;
+	}
+
+	/**
+	 * May the current user get the files of the page?
+	 *
+	 * Called for every file request after the authentication, so the current
+	 * user is set. Hook after this method to add your own conditions; if it
+	 * returns false, the request is answered with 404 Not Found, the same as
+	 * an unknown page.
+	 *
+	 * @param Page $page the page that holds the requested file (may be a repeater page)
+	 * @param Page $accessPage the page that decides the access: $page itself, or for a repeater page the page that owns the repeater
+	 * @return bool by default $accessPage->viewable('', false)
+	 */
+	public function ___isFileAccessible(Page $page, Page $accessPage): bool {
+		return $accessPage->viewable('', false);
 	}
 
 	/**
