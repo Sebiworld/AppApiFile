@@ -75,6 +75,24 @@ A request whose `If-None-Match` header contains the current `ETag` (also as weak
 
 Files of a page that the current user cannot view (e.g. unpublished pages) are answered with `404 Not Found`, the same as an unknown page.
 
+#### Hook: own access conditions
+
+Every file request asks the hookable method `AppApiFile::isFileAccessible(Page $page, Page $accessPage)` whether the current user may get the file. `$page` is the page that holds the file, `$accessPage` is the page that decides the access (the page itself, or for a repeater item the page that owns the repeater). By default it returns `$accessPage->viewable('', false)`. The hook runs after the authentication, so `$user` is the requesting user. If it returns `false`, the request is answered with `404 Not Found`.
+
+Add conditions with an after-hook, e.g. in `site/ready.php`. Keep a `false` that is already there, so the default visibility check still applies:
+
+```php
+$wire->addHookAfter('AppApiFile::isFileAccessible', function (HookEvent $event) {
+	if (!$event->return) {
+		return;
+	}
+	$accessPage = $event->arguments(1);
+	if ($accessPage->template->name === 'members_only' && !$event->wire('user')->isLoggedin()) {
+		$event->return = false;
+	}
+});
+```
+
 **Pro tip**: If you want to include an image from the api using the standard `<img src="">` tag, it can be very difficult to include the api key and a token as headers. However, it is possible to include these values as GET parameters. The GET parameter with the apikey is called `api_key`. A token can be sent as parameter `authorization`.
 
 > Disclaimer: I recommend to use this solution only for this exceptional case. Generally headers are the better and more elegant solution.
@@ -82,6 +100,12 @@ Files of a page that the current user cannot view (e.g. unpublished pages) are a
 <a name="changelog"></a>
 
 ## Changelog
+
+### Changes in 2.1.0 (2026-10-10)
+
+#### New
+
+- New hookable method `AppApiFile::isFileAccessible(Page $page, Page $accessPage): bool`. It decides whether the current user may get a file (after authentication); `false` answers `404 Not Found`, the same as for a page the user cannot view. The default is unchanged (`$accessPage->viewable('', false)`), so existing sites behave as before. See "Hook: own access conditions".
 
 ### Changes in 2.0.0 (2026-10-02)
 
